@@ -31,6 +31,7 @@
 - [Part 16: Using Claude / Claude Code Safely](#part-16-using-claude--claude-code-safely)
 - [Part 17: Quick Answers to Common Questions](#part-17-quick-answers-to-common-questions)
 - [Part 18: Glossary and Cheat Sheet](#part-18-glossary-and-cheat-sheet)
+- [Part 19: Project Plan: Custom Theme on Skeleton (Showcase → Theme Store)](#part-19-project-plan-custom-theme-on-skeleton-showcase--theme-store)
 
 ---
 
@@ -1504,15 +1505,51 @@ If you push your local JSON files over the store's versions, **you can erase the
 - You are building a theme for **many stores** or for the Theme Store, and want your own architecture.
 - The store is **headless** (a React/Hydrogen frontend). That is not a Liquid theme at all.
 
-### 9.4 Recommendation for a beginner on a client project
+### 9.4 Recommendation: it depends on the design and the goal
 
-**Customise Dawn, carefully:**
+Answer two questions:
 
+1. **Does the Figma design look similar to Dawn** (same kind of layout, with changes mainly to colours, fonts and some sections)?
+2. **Might you ever want to sell the theme on the Shopify Theme Store?**
+
+| Design similar to Dawn? | Theme Store is a goal? | Use |
+|---|---|---|
+| Yes | No | **Customise Dawn** (see the tips below) |
+| No, fully custom | No | **Skeleton theme** (Dawn would need so much removal that it is slower) |
+| Yes or No | **Yes** | **Skeleton theme**. Dawn-based themes are **not allowed** on the Theme Store (see 9.5). |
+
+**If you customise Dawn** (a Dawn-like client site only):
 1. **Keep Dawn's core** (cart, search, product form, account, facets). These are hard to get right.
-2. **Build new custom sections** for the Figma designs in **new files** with a clear prefix, e.g. `sections/custom-hero.liquid`, `assets/section-custom-hero.css`. This keeps your work separate from Dawn's files and makes future Dawn updates easier to compare.
-3. **Restyle using Dawn's design tokens** (CSS variables driven by theme settings: colours, fonts, spacing) before writing large amounts of new CSS.
-4. **Edit Dawn files only when needed**, and note every change in the commit message.
-5. **Remove unused sections** near the end of the project, only after confirming the client does not need them.
+2. **Build new custom sections** in **new files** with a clear prefix, e.g. `sections/custom-hero.liquid`.
+3. **Restyle using Dawn's design tokens** (CSS variables from theme settings) before writing lots of new CSS.
+4. **Edit Dawn files only when needed**, and explain every change in the commit message.
+
+**If the design is fully custom, don't "strip Dawn page by page."** Removing Dawn sections sounds easy, but Dawn's CSS (`base.css`) and JS (`global.js`) are shared by almost everything. You would break hidden dependencies and fight leftover styles on every page. Starting small and adding what you need is easier than starting big and removing what you don't. For that path, follow [Part 19](#part-19-project-plan-custom-theme-on-skeleton-showcase--theme-store).
+
+### 9.5 Theme Store eligibility (important)
+
+Shopify's Theme Store requirements say:
+
+> *"New theme submissions built on or derived from Dawn or Horizon are not eligible for the Shopify Theme Store."*
+>
+> *"Shopify's Skeleton Theme is the only approved codebase for Theme Store development."* Otherwise, themes must use fully original code.
+
+In plain words:
+- A theme **started from Dawn can never be listed**, even if you remove or rewrite most of it.
+- To keep the Theme Store option open, **start from Skeleton** (or a truly empty folder).
+- You may **read** Dawn to learn how something works, but **write your own code**. Don't copy it.
+- The theme also needs "meaningful design and functional innovations". Colour, spacing or animation tweaks of another theme are not enough.
+
+Other key requirements (check the page for the full, current list):
+- An average Lighthouse **performance score ≥ 60** and **accessibility score ≥ 90** on the home, product and collection pages, on **both mobile and desktop**
+- Required features: collection/search filters, predictive search, gift card template, app blocks in the product section, section groups for header/footer, JSON templates, multi-level menus, accelerated checkout buttons, unit pricing, pickup availability, localisation selectors, and more
+- A demo store with realistic content for each theme preset
+
+📚 **Links:**
+- Theme Store requirements: https://shopify.dev/docs/storefronts/themes/store/requirements
+- Theme Store overview: https://shopify.dev/docs/storefronts/themes/store
+- Submitting a theme: https://shopify.dev/docs/storefronts/themes/store/review-process/submit-theme
+- Skeleton theme: https://github.com/Shopify/skeleton-theme
 
 ---
 
@@ -2722,7 +2759,10 @@ Use it to explain, scaffold and review. Understand, test and Theme-Check everyth
 Test on the development store with edge-case data, using the QA matrix, accessibility checks and Lighthouse. Then share an unpublished preview theme. See [Part 13, Stage 6](#stage-6-testing).
 
 **Should I use Dawn or build from scratch?**
-As a beginner on a client project, customise Dawn and add your own custom sections. Build from scratch only for very unique designs with an experienced team. See [Part 9](#part-9-dawn-or-build-from-scratch).
+If the design is similar to Dawn and it is only a client site, customise Dawn. If the design is **fully custom**, or you might want to **list it on the Theme Store**, start from Shopify's **Skeleton theme**. Dawn-based themes are not allowed on the Theme Store. See [Part 9](#part-9-dawn-or-build-from-scratch) and [Part 19](#part-19-project-plan-custom-theme-on-skeleton-showcase--theme-store).
+
+**Can I start from Dawn, remove its sections, and later sell it on the Theme Store?**
+No. A theme "built on or derived from Dawn" is not eligible, even if you remove most of it. Start from Skeleton instead. See [Part 9.5](#95-theme-store-eligibility-important).
 
 **What Shopify concepts must I understand before touching the actual project?**
 1. Admin data vs theme code
@@ -2844,6 +2884,368 @@ shopify theme push --unpublished                   # upload as a new preview the
 shopify theme pull --theme <id>                    # download a theme
 shopify theme list                                 # list themes and IDs
 ```
+
+---
+
+## Part 19: Project Plan: Custom Theme on Skeleton (Showcase → Theme Store)
+
+This part is for a project where:
+- The **Figma design is completely custom** and does not look like Dawn
+- It has **scroll-triggered animations**
+- It will be a **showcase project** to win new clients
+- You may want to **sell it on the Shopify Theme Store** later
+
+### 19.1 Decision summary
+
+| | Strip Dawn page by page | **Skeleton theme** ✅ | Empty folder |
+|---|---|---|---|
+| Theme Store allowed? | ❌ **Never** ("derived from Dawn") | ✅ Yes (the only approved base) | ✅ Yes |
+| Difficulty for a beginner | ❌ Hard. Hidden CSS/JS dependencies break as you remove things. | ✅ Medium. The files are small and understandable. | ❌ Hard. Easy to miss required files. |
+| Matches a fully custom design | ⚠️ You fight leftover Dawn styles | ✅ Clean, so you build exactly what Figma shows | ✅ Clean |
+| Showcase value | ⚠️ "It's Dawn underneath" | ✅ Original, clean codebase | ✅ Original |
+| Speed at the start | ✅ Fast (features exist) | ⚠️ Slower (you build features) | ❌ Slowest |
+| Speed overall for a custom design | ❌ Slow (removing + fixing) | ✅ Steady | ⚠️ Slow |
+
+**Decision: start from Skeleton. Keep Dawn only as a study reference.**
+
+> **Why is this OK for a beginner?** You would have to learn how carts, filters and variant pickers work anyway, just to safely remove or change them in Dawn. With Skeleton, you learn them by **building** them one at a time, and you understand every line of your theme.
+
+### 19.2 Setup
+
+**Step 1: Create the new theme in a separate folder** (next to `dawn`, not inside it):
+
+```bash
+cd d:/shopify-oroskin
+shopify theme init oroskin-theme
+cd oroskin-theme
+```
+
+`shopify theme init` downloads Shopify's Skeleton theme. Check that the new folder contains `assets/`, `blocks/`, `config/`, `layout/`, `locales/`, `sections/`, `snippets/` and `templates/`. If the CLI gives you something different, clone it directly instead:
+
+```bash
+git clone https://github.com/Shopify/skeleton-theme.git oroskin-theme
+```
+
+**Step 2: Start a fresh Git history**
+
+```bash
+rm -rf .git          # only if you cloned; removes the Skeleton repo history
+git init
+git add .
+git commit -m "Start Oroskin theme from Shopify Skeleton theme"
+```
+
+**Step 3: Copy your guides** (`SHOPIFY-LEARNING-ROADMAP.md` and `DEVELOPER-GUID.md`) into the new repo.
+
+**Step 4: Run it**
+
+```bash
+shopify theme dev --store your-dev-store.myshopify.com
+```
+
+**Step 5: Keep `d:\shopify-oroskin\dawn` open in a second VS Code window, as a reference only.**
+
+> 🚫 **The "read, don't copy" rule.** Theme Store themes must use original code. When you need a feature (e.g. filters), read how Dawn does it, close the file, and write your own version. Using the same **Shopify APIs** (e.g. `collection.filters`, `/cart/add.js`) is fine and expected. Copying Dawn's **files, markup or JS classes** is not.
+
+### 19.3 Architecture for a custom design
+
+**1. Design tokens first** (before any section)
+
+Take every colour, font, font size, spacing value, radius and shadow from Figma. Put them in **two places**:
+
+- `config/settings_schema.json` holds the values the merchant may change (brand colours, fonts, button radius).
+- CSS variables in `layout/theme.liquid` hold all tokens, reading from settings where one exists:
+
+```liquid
+{%- style -%}
+  :root {
+    /* From theme settings (merchant can change) */
+    --color-primary: {{ settings.color_primary }};
+    --color-background: {{ settings.color_background }};
+    --font-heading: {{ settings.font_heading.family }}, {{ settings.font_heading.fallback_families }};
+    --radius-button: {{ settings.button_radius }}px;
+
+    /* Fixed design-system values (from Figma) */
+    --space-1: 0.25rem;  --space-2: 0.5rem;  --space-3: 1rem;
+    --space-4: 1.5rem;   --space-5: 2.5rem;  --space-6: 4rem;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+{%- endstyle -%}
+```
+
+**2. File structure and naming**
+
+```
+sections/   hero.liquid, featured-products.liquid, ingredients.liquid ...
+blocks/     heading.liquid, text.liquid, button.liquid, image.liquid ...   (theme blocks, reusable in many sections)
+snippets/   product-card.liquid, price.liquid, icon.liquid, image.liquid ...
+assets/     base.css, section-hero.css, component-product-card.css,
+            theme.js, component-animate-on-scroll.js, component-cart-drawer.js
+```
+
+- **Theme blocks** (`blocks/`) are a good fit for a custom design. You write a "Heading", "Text" or "Button" block **once**, and many sections can use it. Skeleton already includes this folder.
+- **One CSS file and one JS file per section/component**, loaded only where used.
+- **BEM-style class names**: `.hero`, `.hero__title`, `.hero--dark`.
+- **Every section** gets a preset, empty states and placeholder content.
+
+📚 Theme blocks: https://shopify.dev/docs/storefronts/themes/architecture/blocks/theme-blocks
+
+### 19.4 Scroll-triggered animations the Shopify way
+
+Animations are a big part of a showcase design, but they are also a common cause of **slow pages, failed accessibility checks and broken Theme Editor previews**. Follow these rules.
+
+**The rules:**
+1. **Use native browser features first:** `IntersectionObserver` + CSS transitions. They add no library weight.
+2. **Animate only `opacity` and `transform`.**
+3. **Never hide the hero / LCP content** waiting for an animation, because that delays LCP.
+4. **Respect `prefers-reduced-motion`**. Show content without motion for users who ask for it.
+5. **Let the merchant control animations**, with a global "Enable animations" setting plus a per-section style.
+6. **Content must be visible without JavaScript.** Only hide elements when JS is running.
+7. **Must work in the Theme Editor.** Sections re-render there, and web components restart themselves automatically.
+8. **Add GSAP / ScrollTrigger only if an effect really needs it** (e.g. complex pinned timelines). Put the file in `assets/`, not an external CDN, and load it only in sections that use it.
+
+**Step 1: Global setting** (`config/settings_schema.json`)
+
+```json
+{
+  "name": "Animations",
+  "settings": [
+    { "type": "checkbox", "id": "animations_enabled", "label": "Enable scroll animations", "default": true }
+  ]
+}
+```
+
+**Step 2: Mark JS and the setting on the page** (`layout/theme.liquid`)
+
+```liquid
+<html class="no-js{% if settings.animations_enabled %} animations-on{% endif %}" lang="{{ request.locale.iso_code }}">
+  <head>
+    <script>document.documentElement.classList.replace('no-js', 'js');</script>
+    {{ 'component-animate-on-scroll.css' | asset_url | stylesheet_tag }}
+    <script src="{{ 'component-animate-on-scroll.js' | asset_url }}" defer="defer"></script>
+    ...
+```
+
+Why the `js` class? Elements are only hidden when **both** JS runs **and** animations are on. If JS fails, everything stays visible.
+
+**Step 3: The CSS** (`assets/component-animate-on-scroll.css`)
+
+```css
+@media (prefers-reduced-motion: no-preference) {
+  .js.animations-on [data-animate] {
+    opacity: 0;
+    transition:
+      opacity 0.7s var(--ease-out, ease-out),
+      transform 0.7s var(--ease-out, ease-out);
+    transition-delay: var(--animate-delay, 0ms);
+  }
+  .js.animations-on [data-animate='fade-up'] { transform: translateY(2rem); }
+  .js.animations-on [data-animate='zoom-in'] { transform: scale(0.96); }
+
+  .js.animations-on [data-animate].is-visible {
+    opacity: 1;
+    transform: none;
+  }
+}
+```
+
+Because everything is inside `prefers-reduced-motion: no-preference`, users who prefer less motion never see hidden or moving content.
+
+**Step 4: The JavaScript** (`assets/component-animate-on-scroll.js`)
+
+```js
+class AnimateOnScroll extends HTMLElement {
+  connectedCallback() {
+    const items = this.querySelectorAll('[data-animate]');
+    if (!items.length) return;
+
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-visible');
+          this.observer.unobserve(entry.target); // animate once, then stop watching
+        });
+      },
+      { rootMargin: '0px 0px -10% 0px', threshold: 0.1 }
+    );
+
+    items.forEach((item) => this.observer.observe(item));
+  }
+
+  disconnectedCallback() {
+    // Runs when the Theme Editor removes/re-renders the section, which prevents memory leaks
+    this.observer?.disconnect();
+  }
+}
+
+if (!customElements.get('animate-on-scroll')) {
+  customElements.define('animate-on-scroll', AnimateOnScroll);
+}
+```
+
+**Why a web component?** When the Theme Editor re-renders a section, the new `<animate-on-scroll>` element runs `connectedCallback()` again **automatically**. You don't need extra `shopify:section:load` code.
+
+**Step 5: Use it in a section** (e.g. `sections/benefits.liquid`)
+
+```liquid
+{%- assign animation = section.settings.animation -%}
+
+<animate-on-scroll class="benefits">
+  <h2
+    class="benefits__title"
+    {% if animation != 'none' %}data-animate="{{ animation }}"{% endif %}
+  >
+    {{ section.settings.heading | escape }}
+  </h2>
+
+  <ul class="benefits__list" role="list">
+    {%- for block in section.blocks -%}
+      {%- assign delay = forloop.index0 | times: 120 -%}
+      <li
+        class="benefits__item"
+        {% if animation != 'none' %}data-animate="{{ animation }}" style="--animate-delay: {{ delay }}ms;"{% endif %}
+        {{ block.shopify_attributes }}
+      >
+        {{ block.settings.title | escape }}
+      </li>
+    {%- endfor -%}
+  </ul>
+</animate-on-scroll>
+
+{% schema %}
+{
+  "name": "Benefits",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Why you'll love it" },
+    {
+      "type": "select",
+      "id": "animation",
+      "label": "Scroll animation",
+      "default": "fade-up",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "fade-up", "label": "Fade up" },
+        { "value": "zoom-in", "label": "Zoom in" }
+      ]
+    }
+  ],
+  "blocks": [
+    { "type": "benefit", "name": "Benefit", "settings": [{ "type": "text", "id": "title", "label": "Title", "default": "Clean ingredients" }] }
+  ],
+  "presets": [{ "name": "Benefits", "blocks": [{ "type": "benefit" }, { "type": "benefit" }, { "type": "benefit" }] }]
+}
+{% endschema %}
+```
+
+Notice:
+- `delay` is **assigned first**, then used, because there are no filters inside attributes or arguments.
+- The **stagger** effect (items appearing one after another) comes from a CSS variable, not JS.
+- The content team can pick **None** for any section.
+
+**Step 6 (optional): Parallax and scroll-linked effects with pure CSS**
+
+Modern browsers can link animation to scroll position **without JS**. Treat it as a bonus: browsers that don't support it just show the static design.
+
+```css
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .animations-on [data-parallax] {
+      animation: parallax linear both;
+      animation-timeline: view();
+    }
+    @keyframes parallax {
+      from { transform: translateY(3rem); }
+      to   { transform: translateY(-3rem); }
+    }
+  }
+}
+```
+
+**Animation checklist:**
+- [ ] The hero/LCP content is **not** animated from hidden
+- [ ] Turning on "Reduce motion" in the OS shows all content with no motion
+- [ ] Disabling JS shows all content
+- [ ] The "Enable animations" setting turns everything off
+- [ ] Sections still animate after being edited in the Theme Editor
+- [ ] Lighthouse CLS and INP are not worse with animations on
+- [ ] Sliders/autoplay can be paused (an accessibility requirement)
+
+📚 **Links:**
+- IntersectionObserver (MDN): https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
+- `prefers-reduced-motion` (MDN): https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion
+- Scroll-driven animations: https://developer.chrome.com/docs/css-ui/scroll-driven-animations
+- Custom elements (MDN): https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements
+- Theme accessibility best practices: https://shopify.dev/docs/storefronts/themes/best-practices/accessibility
+
+### 19.5 Build order with milestones
+
+#### Phase 1: The showcase site (goal: a live, polished, fast site)
+
+| # | Milestone | What to build | ✅ Done when |
+|---|---|---|---|
+| 1 | **Foundation** | Tokens (19.3), `base.css` (reset, typography, buttons, forms), `theme.liquid`, the animation system (19.4) | A test page shows the Figma typography and buttons correctly on mobile and desktop |
+| 2 | **Header & footer** | Header group, menus (multi-level), mobile drawer, footer blocks, newsletter form | Keyboard-accessible menus that match Figma; editable in the Theme Editor |
+| 3 | **Shared pieces** | Snippets: product card, price, image, icon. Theme blocks: heading, text, button, image. | They work with all edge-case data (Part 10.5, Step E) |
+| 4 | **Homepage** | Every homepage section from Figma, with settings, blocks, presets and animations | The whole homepage can be rebuilt from "Add section" in the editor |
+| 5 | **Collection page** | Product grid, **filters** (`collection.filters`), sorting, pagination, empty state | Filters and sorting work, and the page scores well in Lighthouse |
+| 6 | **Product page** | Media gallery, variant picker (JS), add to cart, product blocks, metafield sections, **app block support** | Variants update price/image/URL; reviews app block can be placed |
+| 7 | **Cart** | Cart drawer and/or cart page using the Cart AJAX API | Add/change/remove works without reload; screen readers hear the updates |
+| 8 | **Other pages** | Search (with predictive search), blog, article, page, contact, 404, password, customer account pages | Every template renders and is styled |
+| 9 | **QA & performance** | Parts 12 and 13 checklists | Lighthouse mobile ≥ 60 performance and ≥ 90 accessibility on home/collection/product |
+| 10 | **Launch the showcase** | Real content, domain, launch checklist (Part 13, Stage 10) | Live, and presentable to potential clients |
+
+#### Phase 2: Theme Store preparation (only after Phase 1 is stable)
+
+- [ ] Read the **full current requirements** page and turn it into a checklist
+- [ ] Complete every required feature. Examples: gift card template (with QR code), pickup availability, complementary/related products, 3D and video media, accelerated checkout buttons (product + cart), Shop Pay Installments banner, unit pricing, selling plans (subscriptions), country/currency and language selectors, social metadata
+- [ ] App blocks (`@app`) in the main product and featured product sections
+- [ ] Blocks for all/most elements of the main product section
+- [ ] Translations complete in `locales/` (no hardcoded text anywhere)
+- [ ] **Theme presets** (styles), each with its own **demo store** and realistic content
+- [ ] Theme Check has zero errors
+- [ ] Lighthouse averages meet the thresholds on **mobile and desktop**
+- [ ] Documentation for merchants
+- [ ] Submit through the Partner Dashboard, then fix review feedback
+
+### 19.6 Using Dawn as a reference safely
+
+When you reach a feature, study the matching Dawn file to understand the **approach and the Shopify APIs used**. Then write your own implementation.
+
+| Feature you're building | Study in Dawn (read only) | Shopify API to learn |
+|---|---|---|
+| Theme settings → CSS variables | `layout/theme.liquid`, `config/settings_schema.json` | `settings`, `font_face` |
+| Responsive images | `sections/image-banner.liquid` | `image_url`, `image_tag` |
+| Product card + price | `snippets/card-product.liquid`, `snippets/price.liquid` | `product`, `variant`, `money` |
+| Collection filters | `snippets/facets.liquid`, `sections/main-collection-product-grid.liquid` | `collection.filters`, Section Rendering API |
+| Variant picker | `snippets/product-variant-picker.liquid`, `assets/global.js` | `product.options_with_values`, variants |
+| Add to cart / cart drawer | `assets/cart.js`, `snippets/cart-drawer.liquid` | Cart AJAX API |
+| Predictive search | `sections/predictive-search.liquid` | `/search/suggest` |
+| Menus + mobile drawer | `sections/header.liquid`, `snippets/header-drawer.liquid` | `linklists` |
+| Localisation selectors | `snippets/country-localization.liquid` | `localization`, `{% form 'localization' %}` |
+| Gift card page | `templates/gift_card.liquid` | `gift_card` |
+| SEO tags | `snippets/meta-tags.liquid` | `page_title`, `canonical_url` |
+
+**How to "read, don't copy" in practice:**
+1. Read the Dawn file and write down, **in your own words**, what it does and which Shopify objects/APIs it uses.
+2. Close the Dawn file.
+3. Build your version from your notes, the Shopify docs and your Figma design.
+4. Compare behaviour (not code) with Dawn in the browser.
+
+### 19.7 Realistic expectations
+
+- **Phase 1 (showcase) is the real priority.** A fast, accessible, well-animated live site is already a strong portfolio piece.
+- **The Theme Store is a big extra step.** It needs many features beyond the design, strict review, demo stores and ongoing support for merchants who buy it.
+- Shopify takes a **15% revenue share** on Theme Store sales.
+- First-time sellers may need to apply to become a **Theme Partner** before submitting. The review process can take a long time. **Check the current docs**, because these rules change.
+- **Every good decision in Phase 1 makes Phase 2 easier:** original code, no hardcoded text, app blocks, good Lighthouse scores and proper presets.
+
+📚 **Links:**
+- Theme Store requirements: https://shopify.dev/docs/storefronts/themes/store/requirements
+- Theme Store overview: https://shopify.dev/docs/storefronts/themes/store
+- Submit a theme: https://shopify.dev/docs/storefronts/themes/store/review-process/submit-theme
+- Skeleton theme: https://github.com/Shopify/skeleton-theme
+- Shopify changelog (requirement updates): https://shopify.dev/changelog
 
 ---
 
